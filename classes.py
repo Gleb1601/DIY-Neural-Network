@@ -76,3 +76,40 @@ class Model:
         return self.layers[0].forward(input)
     def backward(self, grad, lr):
         self.layers[-1].backward(grad, lr)
+
+    def train(self, X, y, lr, batch_size, loss, epochs, val_data=None):
+        (n_samples, n_features)  = X.shape
+
+        for epoch in range(epochs):
+            epoch_error = 0.0
+            acc_score = 0.0
+            test_error = None
+            test_acc = None
+
+            for i in range(int(n_samples / batch_size)):
+
+                batch_start, batch_end = i*batch_size, (i+1)*batch_size
+
+                input = X[batch_start:batch_end]
+                labels = y[batch_start:batch_end]
+
+                pred = self.forward(input)
+                error = loss(labels, pred)
+                gradient = loss(labels, pred, deriv=True)
+
+                self.backward(gradient, lr)
+
+                epoch_error += error
+                acc_score += np.sum((np.argmax(labels, axis=1) == np.argmax(pred, axis=1)).astype(int))
+
+            acc_score /= n_samples
+            epoch_error /= batch_size
+
+            if val_data != None:
+
+                X_test, y_test = val_data
+                pred = self.forward(X_test)
+                test_error = loss(y_test, pred)
+                test_acc = np.sum((np.argmax(y_test, axis=1) == np.argmax(pred, axis=1)).astype(int)) / len(X_test)
+
+            print(f'epoch {epoch}: train_loss: {epoch_error}, train_acc: {acc_score}, test_error: {test_error}, test_acc: {test_acc}')
