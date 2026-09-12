@@ -1,3 +1,6 @@
+import numpy as np
 
-def relu(x):
-    return x * (x >= 0)
+def MSE(true, pred, deriv=False):
+    if deriv:
+        return (pred - true) / len(pred)
+    return np.mean((pred - true) ** 2) / 2 
