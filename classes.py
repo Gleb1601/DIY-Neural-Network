@@ -83,12 +83,14 @@ class Model:
         for epoch in range(epochs):
             epoch_error = 0.0
             acc_score = 0.0
+            n_seen = 0 
             test_error = None
             test_acc = None
 
             for i in range(int(n_samples / batch_size)):
 
-                batch_start, batch_end = i*batch_size, (i+1)*batch_size
+                batch_start= i*batch_size
+                batch_end = min(batch_start+batch_size, len(X))
 
                 input = X[batch_start:batch_end]
                 labels = y[batch_start:batch_end]
@@ -99,11 +101,13 @@ class Model:
 
                 self.backward(gradient, lr)
 
-                epoch_error += error
+                epoch_error += error * len(input)
+                n_seen += len(input)
+
                 acc_score += np.sum((np.argmax(labels, axis=1) == np.argmax(pred, axis=1)).astype(int))
 
-            acc_score /= n_samples
-            epoch_error /= batch_size
+            acc_score /= n_seen
+            epoch_error /= n_seen
 
             if val_data != None:
 
