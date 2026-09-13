@@ -16,16 +16,22 @@ def ohe(labels):
     for i,l in enumerate(labels):
         temp[i][l] = 1
     return temp
-
-
 train_labels = ohe(y_train)
 test_labels = ohe(y_test)
 
 
+
 model = Model([
-    Dense((784,8)),
+    Dense((784,16)),
     ReLU(),
-    Dense((8, 10))
+    Dense((16, 10))
 ])
 
-model.train(train, train_labels, lr=0.001, batch_size=32, loss=MSE, epochs=100, val_data=(test, test_labels))
+hist = model.train(train, train_labels, lr=0.001, batch_size=32, loss=mse, metric=acc_score, epochs=10, val_data=(test, test_labels))
+print(hist)
+
+
+train_loss  = hist['train_loss']
+plt.plot(train_loss)
+plt.show()
+

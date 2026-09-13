@@ -77,43 +77,52 @@ class Model:
     def backward(self, grad, lr):
         self.layers[-1].backward(grad, lr)
 
-    def train(self, X, y, lr, batch_size, loss, epochs, val_data=None):
+    def train(self, X, y, lr, batch_size, loss, metric,  epochs, val_data=None):
         (n_samples, n_features)  = X.shape
-
+        history = {'train_loss' : [], 'train_metric' : [], 'test_loss' : [], 'test_metric' : []}
         for epoch in range(epochs):
+
             epoch_error = 0.0
-            acc_score = 0.0
+            epoch_metric = 0.0
             n_seen = 0 
             test_error = None
             test_acc = None
 
-            for i in range(int(n_samples / batch_size)):
+            for batch_start in range(0, n_samples, batch_size):
 
-                batch_start= i*batch_size
-                batch_end = min(batch_start+batch_size, len(X))
+                batch_end = min(batch_start+batch_size, n_samples)
 
                 input = X[batch_start:batch_end]
                 labels = y[batch_start:batch_end]
 
                 pred = self.forward(input)
-                error = loss(labels, pred)
+
+                batch_error = loss(labels, pred)
                 gradient = loss(labels, pred, deriv=True)
+                batch_metric = metric(labels, pred)
 
                 self.backward(gradient, lr)
 
-                epoch_error += error * len(input)
+                epoch_error += batch_error * len(input)
+                epoch_metric += batch_metric * len(input)
                 n_seen += len(input)
 
-                acc_score += np.sum((np.argmax(labels, axis=1) == np.argmax(pred, axis=1)).astype(int))
-
-            acc_score /= n_seen
+            epoch_metric /= n_seen
             epoch_error /= n_seen
 
+            X_test, y_test = None, None
             if val_data != None:
 
                 X_test, y_test = val_data
                 pred = self.forward(X_test)
                 test_error = loss(y_test, pred)
-                test_acc = np.sum((np.argmax(y_test, axis=1) == np.argmax(pred, axis=1)).astype(int)) / len(X_test)
+                test_metric = metric(y_test, pred)
 
-            print(f'epoch {epoch}: train_loss: {epoch_error}, train_acc: {acc_score}, test_error: {test_error}, test_acc: {test_acc}')
+            history['train_loss'].append(epoch_error)
+            history['train_metric'].append(epoch_metric)
+            history['test_loss'].append(test_error)
+            history['test_metric'].append(test_metric)
+
+            print(f'epoch {epoch}: train_loss: {epoch_error}, train_acc: {epoch_metric}, test_error: {test_error}, test_acc: {test_metric}')
+
+        return history
