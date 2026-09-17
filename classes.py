@@ -77,6 +77,11 @@ class Model:
     def backward(self, grad, lr):
         self.layers[-1].backward(grad, lr)
 
+    def shuffle_data(self, X,y):
+        rng = np.random.default_rng()
+        indices = rng.permutation(len(X))
+        return X[indices], y[indices]
+
     def train(self, X, y, lr, batch_size, loss, metric,  epochs, val_data=None):
         (n_samples, n_features)  = X.shape
         history = {'train_loss' : [], 'train_metric' : [], 'test_loss' : [], 'test_metric' : []}
@@ -86,7 +91,8 @@ class Model:
             epoch_metric = 0.0
             n_seen = 0 
             test_error = None
-            test_acc = None
+            test_metric = None
+            X,y = self.shuffle_data(X,y)
 
             for batch_start in range(0, n_samples, batch_size):
 
